@@ -140,10 +140,46 @@
             if (movesTaken < 5) {
               return;
             }
-            /* Need to check if there are three tokens the same in a row */
-            if ($('.grid-1').html() === $('.grid-2').html() && $('.grid-1').html() === $('.grid-3').html()) {
-              // We have three in a row.
+            // Row 1
+            if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-2').html() && $('.grid-1').html() === $('.grid-3').html()) {
               gameOver = true;
+            }
+
+            // Row 2
+            if ($('.grid-4').html() !== '' && $('.grid-4').html() === $('.grid-5').html() && $('.grid-4').html() === $('.grid-6').html()) {
+              gameOver = true;
+            }
+
+            // Row 3
+            if ($('.grid-7').html() !== '' && $('.grid-7').html() === $('.grid-8').html() && $('.grid-7').html() === $('.grid-9').html()) {
+              gameOver = true;
+            }
+
+            // Col 1
+            if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-4').html() && $('.grid-1').html() === $('.grid-7').html()) {
+              gameOver = true;
+            }
+
+            // Col 2
+            if ($('.grid-2').html() !== '' && $('.grid-2').html() === $('.grid-5').html() && $('.grid-2').html() === $('.grid-8').html()) {
+              gameOver = true;
+            }
+
+            // Col 3
+            if ($('.grid-3').html() !== '' && $('.grid-3').html() === $('.grid-6').html() && $('.grid-3').html() === $('.grid-9').html()) {
+              gameOver = true;
+            }
+
+            // Diag 1
+            if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-5').html() && $('.grid-1').html() === $('.grid-9').html()) {
+              gameOver = true;
+            }
+
+            // Diag 2
+            if ($('.grid-3').html() !== '' && $('.grid-3').html() === $('.grid-5').html() && $('.grid-3').html() === $('.grid-7').html()) {
+              gameOver = true;
+            }
+            if (gameOver) {
               $('.winner-text').html(currPlayer.name + ' wins!');
             }
           }
