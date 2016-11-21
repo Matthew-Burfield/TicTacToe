@@ -8,6 +8,40 @@
     <style>
       html, body, .container-table {
           height: 100%;
+          color: #fff;
+      }
+      .fullscreen-bg {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        overflow: hidden;
+        z-index: -100;
+      }
+      .fullscreen-bg__video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      @media (min-aspect-ratio: 16/9) {
+        .fullscreen-bg__video {
+          height: 300%;
+          top: -100%;
+        }
+      }
+      @media (max-aspect-ratio: 16/9) {
+        .fullscreen-bg__video {
+          width: 300%;
+          left: -100%;
+        }
+      }
+      @media (max-width: 767px) {
+        .fullscreen-bg {
+          background: url('') center center / cover no-repeat;
+        }
       }
       .container-table {
           display: table;
@@ -37,6 +71,11 @@
     </style>
   </head>
   <body>
+    <div class="fullscreen-bg">
+      <video loop muted autoplay poster="" class="fullscreen-bg__video">
+        <source src="http://video2.ignitemotion.com/files/mp4/Bubbles_Animation.mp4" type = "video/mp4">
+      </video>
+    </div>
     <div class="container container-table">
       <div class="row vertical-center-row">
         <h1 class="text-center">Tic Tac Toe</h1>
@@ -78,7 +117,7 @@
         $(".player2").html(player2.name + ': <span>' + player2.token + '</span>');
 
         $('.grid').click(function() {
-          if (!game.isGameOver()) {
+          if ($(this).html() === '' && !game.isGameOver()) {
             $(this).html(game.nextPlayer().token);
             setCurrentPlayer();
             game.checkGameOver();
