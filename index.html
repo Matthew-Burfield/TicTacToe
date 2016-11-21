@@ -78,9 +78,10 @@
         $(".player2").html(player2.name + ': <span>' + player2.token + '</span>');
 
         $('.grid').click(function() {
-          if (game.isGamePlayable()) {
+          if (!game.isGameOver()) {
             $(this).html(game.nextPlayer().token);
             setCurrentPlayer();
+            game.checkGameOver();
           }
         });
 
@@ -96,7 +97,9 @@
         function Game(playerOne, playerTwo) {
           var startingPlayer = playerOne,
           nextPlayer = undefined,
-          gameOver = false;
+          currPlayer = startingPlayer,
+          gameOver = false,
+          movesTaken = 0;
           this.playerOne = playerOne,
           this.playerTwo = playerTwo;
 
@@ -105,40 +108,43 @@
           }
 
           this.nextPlayer = function() {
-            var playerToReturn;
+            movesTaken++;
             if (nextPlayer === undefined) {
               nextPlayer = startingPlayer;
               startingPlayer = startingPlayer === playerOne ? playerTwo : playerOne;
             }
-            playerToReturn = nextPlayer;
+            currPlayer = nextPlayer;
             nextPlayer = nextPlayer === playerOne ? playerTwo : playerOne;
-            return playerToReturn;
+            return currPlayer;
           };
 
           this.resetGameBoard = function() {
             var gridPieces = $('.grid');
             nextPlayer = undefined;
+            movesTaken = 0;
+            currPlayer = startingPlayer;
+            gameOver = false;
             gridPieces.html('');
+            $('.winner-text').html('');
           };
 
           this.currentPlayerTurn = function() {
             return nextPlayer || startingPlayer;
           };
 
-          this.isGamePlayable = function() {
-            if (gameOver) {
-              return false;
-            } else {
-              return true;
-            }
+          this.isGameOver = function() {
+            return gameOver;
           };
 
-          function checkGameOver() {
+          this.checkGameOver = function() {
+            if (movesTaken < 5) {
+              return;
+            }
             /* Need to check if there are three tokens the same in a row */
-            if ($('grid-1').html() === $('grid-2').html() && $('grid-1').html() === $('grid-3').html()) {
+            if ($('.grid-1').html() === $('.grid-2').html() && $('.grid-1').html() === $('.grid-3').html()) {
               // We have three in a row.
               gameOver = true;
-              $('.winner-text').html('Player wins!');
+              $('.winner-text').html(currPlayer.name + ' wins!');
             }
           }
         }
