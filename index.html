@@ -1,0 +1,157 @@
+<html>
+  <head>
+
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"> -->
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <style>
+      html, body, .container-table {
+          height: 100%;
+      }
+      .container-table {
+          display: table;
+      }
+      .vertical-center-row {
+          display: table-cell;
+          vertical-align: middle;
+      }
+      .game-board {
+        height: 400px;
+        width: 400px;
+      }
+      .grid {
+        height: 33%;
+        line-height: 100%;
+        vertical-align: middle;
+        font-size: 40px;
+        line-height: 130px;
+        vertical-align: middle;
+      }
+      .grid-1, .grid-2, .grid-3, .grid-4, .grid-5, .grid-6 {
+        border-bottom: #000 solid 1px;
+      }
+      .grid-1, .grid-2, .grid-4, .grid-5, .grid-7, .grid-8 {
+        border-right: #000 solid 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container container-table">
+      <div class="row vertical-center-row">
+        <h1 class="text-center">Tic Tac Toe</h1>
+        <div class="game-board text-center col-xs-4 col-xs-offset-4">
+          <!-- first row -->
+          <div class="grid grid-1 col-xs-4"></div><div class="grid grid-2 col-xs-4"></div><div class="grid grid-3 col-xs-4"></div>
+          <!-- second row -->
+          <div class="grid grid-4 col-xs-4"></div><div class="grid grid-5 col-xs-4"></div><div class="grid grid-6 col-xs-4"></div>
+          <!-- third row -->
+          <div class="grid grid-7 col-xs-4"></div><div class="grid grid-8 col-xs-4"></div><div class="grid grid-9 col-xs-4"></div>
+        </div>
+        <div class="buttons">
+          <button type="button" class="btn btn-default btn-reset">Start New Game</button>
+          <h4 class="current-player-turn">Turn: <span></span></h4>
+          <h5 class="player1"></h3>
+          <h5 class="player2"></h3>
+          <h2 class="winner-text"></h2>
+        </div>
+      </div>
+    </div>
+
+    <script
+    src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <!-- <script
+    src="../Frameworks/Javascript/jQuery/jquery-3.1.1.min.js"></script> -->
+
+    <script>
+      $(document).ready(function() {
+        var player1 = new Player('Player One', 'X'),
+            player2 = new Player('Player Two','O'),
+            game = new Game(player1, player2);
+
+        $(".player1").html(player1.name + ': <span>' + player1.token + '</span>');
+        $(".player2").html(player2.name + ': <span>' + player2.token + '</span>');
+
+        $('.grid').click(function() {
+          if (game.isGamePlayable()) {
+            $(this).html(game.nextPlayer().token);
+            setCurrentPlayer();
+          }
+        });
+
+        $('.btn-reset').click(function() {
+          game.resetGameBoard();
+          setCurrentPlayer();
+        });
+
+        function setCurrentPlayer() {
+          $('.current-player-turn > span').html(game.currentPlayerTurn().name);
+        }
+
+        function Game(playerOne, playerTwo) {
+          var startingPlayer = playerOne,
+          nextPlayer = undefined,
+          gameOver = false;
+          this.playerOne = playerOne,
+          this.playerTwo = playerTwo;
+
+          if (playerOne.token === playerTwo.token) {
+            throw "Opposing players cannot have the same tokens.";
+          }
+
+          this.nextPlayer = function() {
+            var playerToReturn;
+            if (nextPlayer === undefined) {
+              nextPlayer = startingPlayer;
+              startingPlayer = startingPlayer === playerOne ? playerTwo : playerOne;
+            }
+            playerToReturn = nextPlayer;
+            nextPlayer = nextPlayer === playerOne ? playerTwo : playerOne;
+            return playerToReturn;
+          };
+
+          this.resetGameBoard = function() {
+            var gridPieces = $('.grid');
+            nextPlayer = undefined;
+            gridPieces.html('');
+          };
+
+          this.currentPlayerTurn = function() {
+            return nextPlayer || startingPlayer;
+          };
+
+          this.isGamePlayable = function() {
+            if (gameOver) {
+              return false;
+            } else {
+              return true;
+            }
+          };
+
+          function checkGameOver() {
+            /* Need to check if there are three tokens the same in a row */
+            if ($('grid-1').html() === $('grid-2').html() && $('grid-1').html() === $('grid-3').html()) {
+              // We have three in a row.
+              gameOver = true;
+              $('.winner-text').html('Player wins!');
+            }
+          }
+        }
+
+        function Player(playerName, playerToken) {
+          this.name = playerName;
+          this.token = playerToken;
+
+          if (playerToken !== 'X' && playerToken !== 'O') {
+            throw "Player token must be X or O";
+          }
+        }
+      });// end document ready 
+    </script>
+  </body>
+</html>
