@@ -11,10 +11,12 @@
           height: 100%;
           color: #fff;
       }
+      #op {
+        display: block;
+      }
       input{
         display:none;
       }
-
       .overlay{
         position: fixed;
         width: 100%;
@@ -34,7 +36,46 @@
         cursor:pointer;
       }*/
 
-      .overlay nav {
+      .overlay-container .menu-title {
+        -webkit-transform: translateY(-100%);
+        transform: translateY(-100%);
+      }
+
+      .overlay-container {
+        text-align: center;
+        position: relative;
+        top: 50%;
+        height: 60%;
+        font-size: 54px;
+        -webkit-transform: translateY(-50%);
+        transform: translateY(-50%);
+      }
+
+      .overlay a, .overlay label, .overlay span {
+        font-weight: 300;
+        display: block;
+        color: white;
+        text-decoration:none;
+        -webkit-transition: color 0.2s;
+        transition: color 0.2s;
+        font-family: 'NotCourierSans';
+        text-transform:uppercase;
+      }
+
+      .overlay a:hover {
+        color: #849368;
+        cursor: pointer;
+      }
+
+      .overlay .player-count-container {
+        display: block;
+      }
+
+      .overlay .token-select-container {
+        display: none;
+      }
+
+      /*.overlay nav {
         text-align: center;
         position: relative;
         top: 50%;
@@ -70,21 +111,28 @@
         transition: color 0.2s;
         font-family: 'NotCourierSans';
         text-transform:uppercase;
-      }
+      }*/
 
-      .overlay ul li a:hover,
+      /*.overlay ul li a:hover,
       .overlay ul li a:focus,
       .overlay ul li label a:focus,
       .overlay ul li label a:focus,
        {
         color: #849368;
-      }
+      }*/
 
-      .lower~.overlay-hugeinc{
+      /*.lower~.overlay-hugeinc{
         opacity: 0;
         visibility: hidden;
         -webkit-transition: opacity 0.5s, visibility 0s 0.5s;
         transition: opacity 0.5s, visibility 0s 0.5s;
+      }*/
+
+      #op~.overlay-hugeinc{
+        opacity: 0;
+        visibility: hidden;
+        -webkit-transition: opacity 0.5s;
+        transition: opacity 0.5s;
       }
 
       #op:checked~.overlay-hugeinc{
@@ -94,28 +142,28 @@
         transition: opacity 0.5s;
       }
 
-      .overlay-hugeinc nav {
+      /*.overlay-hugeinc nav {
         -moz-perspective: 300px;
-      }
+      }*/
 
-      .overlay-hugeinc nav ul {
+      /*.overlay-hugeinc nav ul {
         opacity: 0.4;
         -webkit-transform: translateY(-25%) rotateX(35deg);
         transform: translateY(-25%) rotateX(35deg);
         -webkit-transition: -webkit-transform 0.5s, opacity 0.5s;
         transition: transform 0.5s, opacity 0.5s;
-      }
+      }*/
 
-      #op:checked~.overlay-hugeinc nav ul {
+      /*#op:checked~.overlay-hugeinc nav ul {
         opacity: 1;
         -webkit-transform: rotateX(0deg);
         transform: rotateX(0deg);
-      }
+      }*/
 
-      #op:not(:checked)~.overlay-hugeinc nav ul {
+      /*#op:not(:checked)~.overlay-hugeinc nav ul {
         -webkit-transform: translateY(25%) rotateX(-35deg);
         transform: translateY(25%) rotateX(-35deg);
-      }
+      }*/
       /*Hide the radio buttons*/
       [type='radio']{
           display: none;
@@ -210,15 +258,47 @@
           <h2 class="winner-text"></h2>
         </div>
       </div>
-      <input type="checkbox" checked id="op"></input>
-      <div class="lower">
-        <label for="op">Menu</label>
-      </div>
+      <input type="checkbox" id="op"></input>
       <div class="overlay overlay-hugeinc">
-        <nav>
+        <div class="overlay-container">
+          <div class="menu-title">
+          <h1>Tic Tac Toe</h1>
+          <h2>Menu</h2>
+          </div>
+          <div class="row player-count-container">
+            <div class="col-xs-12"><h3>How many players?</h3></div>
+            <div class="col-md-4 col-md-offset-1">
+              <input type="radio" name="player-count" value="1" id="radio-one-player"/>
+              <label for="radio-one-player"><a>One Player</a></label>
+            </div>
+            <div class="col-md-2"><span>&#9670;</span></div>
+            <div class="col-md-4">
+              <input type="radio" name="player-count" value="2" id="radio-two-player"/>
+              <label for="radio-two-player"><a>Two Players</a></label>
+            </div>
+          </div>
+          <div class="row token-select-container">
+            <div class="col-xs-12"><h3>Which token do you want player 1 to be?</h3></div>
+            <div class="col-md-3 col-md-offset-2">
+              <input type="radio" name="token-select" value="x" id="radio-x"/>
+              <label for="radio-x"><a>X</a></label>
+            </div>
+            <div class="col-md-2"><span>&#9670;</span></div>
+            <div class="col-md-3">
+              <input type="radio" name="token-select" value="o" id="radio-o"/>
+              <label for="radio-o"><a>O</a></label>
+            </div>
+          </div>
+          <div class="row game-options-container">
+            <div class="col-xs-12">
+              <a id="game-options-back">Back</a> <a id="game-options-start">Start</a>
+            </div>
+          </div>
+        </div>
+        <!-- <nav>
           <form id="game-options">
             <ul>
-              <li>
+              <li class="menu1">
                 <div class="row">
                   <div class="col-md-5">
                     <input type="radio" name="player-count" value="one" id="radio-one-player"/>
@@ -231,14 +311,13 @@
                   </div>
                 </div>
               </li>
-              <li></li>
-              <li>
+              <li class="menu2">
                 <div class="row">
                   <div class="col-md-5">
                     <input type="radio" name="token-select" value="x" id="radio-x"/>
                     <label for="radio-x"><a>X</a></label>
                   </div>
-                  <div class="col-md-1"><!-- <span>&#9670;</span> --></div>
+                  <div class="col-md-1"><!-- <span>&#9670;</span> --</div>
                   <div class="col-md-5">
                     <input type="radio" name="token-select" value="o" id="radio-o"/>
                     <label for="radio-o"><a>O</a></label>
@@ -249,7 +328,7 @@
               <li><label for="op"><input type="submit" value="Start Game"><a id="start">Start Game</a></label></li>
             </ul>
           </form>
-        </nav>
+        </nav> -->
       </div>
     </div>
 
@@ -309,8 +388,22 @@
           setCurrentPlayer();
         });
 
-        $( "#start" ).click(function() {
-          $( "#game-options" ).submit();
+        $("#game-options-start").click(function() {
+          if ($(".overlay .player-count-container").css("display") === "block") {
+            $(".overlay .player-count-container").css("display", "none");
+            $(".overlay .token-select-container").css("display", "block");
+          } else {
+            $(".overlay .player-count-container").css("display", "block");
+            $(".overlay .token-select-container").css("display", "none");
+          }
+        });
+
+        $( "input[name=token-select]:radio" ).click(function() {
+          game["player-token"] = $( "input[name=token-select]:radio:checked" ).val().toUpperCase();
+        });
+
+        $( "input[name=player-count]:radio").click(function() {
+          game["player-count"] = Number($( "input[name=player-count]:radio:checked" ).val());
         });
 
         function setCurrentPlayer() {
