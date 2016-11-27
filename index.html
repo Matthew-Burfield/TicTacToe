@@ -23,16 +23,6 @@
         background: rgba(0,0,0,0.6);
       }
 
-      /*.overlay label{
-        width: 58px;
-        height:58px;
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        z-index: 100;
-        cursor:pointer;
-      }*/
-
       .overlay-container .menu-title {
         -webkit-transform: translateY(-50%);
         transform: translateY(-50%);
@@ -167,7 +157,7 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Tic Tac Toe</a>
+            <a class="navbar-brand">Tic Tac Toe</a>
           </div>
           <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -253,45 +243,53 @@
       $(document).ready(function() {
         var gameData = {};
 
+        /* When a grid item on the game board is clicked, add the token for the current player
+           and check to see if there is a winner */
         $('.grid').click(function() {
           if ($(this).html() === '' && !gameData.game.isGameOver()) {
-            $(this).html(gameData.game.nextPlayer().token);
-            setCurrentPlayer();
-            gameData.game.checkGameOver();
+            var nextPlayer = gameData.game.getNextPlayer();
+            if (nextPlayer.constructor.name === "Player") {
+              $(this).html(nextPlayer.token);
+              setCurrentPlayer();
+              gameData.game.checkGameOver();
+            }
+            if (gameData['player-count'] === 1) {
+              ai(aiMove);
+            }
           }
         });
 
+        function ai(callback) {
+          var nextPlayer = gameData.game.getNextPlayer();
+          nextPlayer.updateBoard();
+          callback(nextPlayer);
+        }
+
+        function aiMove(nextPlayer) {
+          nextPlayer.updateMoves();
+          setCurrentPlayer();
+          gameData.game.checkGameOver();
+        }
+
+        /* New game: reset the game board */
         $('.btn-reset').click(function() {
+          if (gameData.game.playerTwo.constructor.name !== "Player") {
+            gameData.game.playerTwo.init();
+          }
           gameData.game.resetGameBoard();
           setCurrentPlayer();
         });
 
+        /* Reopen the main menu */
         $('.btn-main-menu').click(function() {
           $("#op").attr("checked", true);
         });
 
+        /* The start game button has been clicked from the main menu
+           Create the players and initialise the game */
         $('#game-options-start').click(function() {
-          var data = $('#game-options').serializeArray().reduce(function(obj, item) {
-            obj[item.name] = item.value;
-            return obj;
-          }, {});
-          var playerOneToken = gameData['player-token'];
-          var playerTwoToken = gameData['player-token'] === 'X' ? 'O' : 'X';
-          if (gameData['player-count'] === 1) {
-            // one player
-
-          } else {
-            // two player
-            player1 = new Player('Player One', playerOneToken);
-            player2 = new Player('Player Two', playerTwoToken);
-          }
-          game = new Game(player1, player2);
-          gameData.game = game;
+          setNewPlayers();
           gameData.game.resetGameBoard();
-
-          $(".player1").html(player1.name + ': <span>' + player1.token + '</span>');
-          $(".player2").html(player2.name + ': <span>' + player2.token + '</span>');
-
           setCurrentPlayer();
 
           // reset main menu and then remove the overlay
@@ -299,20 +297,43 @@
           $("#op").attr("checked", false);
         });
 
+        /* The back button in the main menu has been pressed. Go back a screen */
         $("#game-options-back").click(function() {
           returnToFirstMainMenuScreen();
         });
 
+        function setNewPlayers() {
+          var playerOneToken = gameData['player-token'];
+          var playerTwoToken = gameData['player-token'] === 'X' ? 'O' : 'X';
+
+          player1 = new Player('Player One', playerOneToken);
+          if (gameData['player-count'] === 1) {
+            // one player
+            player2 = new ComputerPlayer(playerTwoToken);
+          } else {
+            // two player
+            player2 = new Player('Player Two', playerTwoToken);
+          }
+          game = new Game(player1, player2);
+          gameData.game = game;
+          
+          $(".player1").html(player1.name + ': <span>' + player1.token + '</span>');
+          $(".player2").html(player2.name + ': <span>' + player2.token + '</span>');
+        }
+
+        /* Helper function to go back to the start of the main menu */
         function returnToFirstMainMenuScreen() {
           $(".overlay .player-count-container").css("display", "block");
           $(".overlay .token-select-container").css("display", "none");
           $("#game-options-back, #game-options-start").css("display", "none");
         }
 
+        /* Set the token for player 1 from the main menu */
         $( "input[name=token-select]:radio" ).click(function() {
           gameData["player-token"] = $( "input[name=token-select]:radio:checked" ).val().toUpperCase();
         });
 
+        /* Set the game to be either 1 player or 2 players */
         $( "input[name=player-count]:radio").click(function() {
           var playerCount = Number($( "input[name=player-count]:radio:checked" ).val());
           gameData["player-count"] = playerCount;
@@ -326,101 +347,117 @@
           $("#game-options-back, #game-options-start").css("display", "block");
         });
 
+        /* Helper function to display the current player on the game board */
         function setCurrentPlayer() {
           $('.current-player-turn > span').html(gameData.game.currentPlayerTurn().name);
         }
 
+        /* Game class: this class holds all the information for the current game */
         function Game(playerOne, playerTwo) {
-          var startingPlayer = playerOne,
-          nextPlayer = undefined,
-          currPlayer = startingPlayer,
-          gameOver = false,
-          movesTaken = 0;
-          this.playerOne = playerOne,
+          this.startingPlayer = playerOne;
+          this.nextPlayer = undefined;
+          this.currPlayer = this.startingPlayer;
+          this.gameOver = false;
+          this.movesTaken = 0;
+          this.playerOne = playerOne;
           this.playerTwo = playerTwo;
 
           if (playerOne.token === playerTwo.token) {
             throw "Opposing players cannot have the same tokens.";
           }
+        }
 
-          this.nextPlayer = function() {
-            movesTaken++;
-            if (nextPlayer === undefined) {
-              nextPlayer = startingPlayer;
-              startingPlayer = startingPlayer === playerOne ? playerTwo : playerOne;
+        Game.prototype = {
+          getNextPlayer: function() {
+            this.movesTaken++;
+            if (this.nextPlayer === undefined) {
+              this.nextPlayer = this.startingPlayer;
+              this.startingPlayer = this.startingPlayer === this.playerOne ? this.playerTwo : this.playerOne;
             }
-            currPlayer = nextPlayer;
-            nextPlayer = nextPlayer === playerOne ? playerTwo : playerOne;
-            return currPlayer;
-          };
-
-          this.resetGameBoard = function() {
+            this.currPlayer = this.nextPlayer;
+            this.nextPlayer = this.nextPlayer === this.playerOne ? this.playerTwo : this.playerOne;
+            return this.currPlayer;
+          },
+          resetGameBoard: function() {
             var gridPieces = $('.grid');
-            nextPlayer = undefined;
-            movesTaken = 0;
-            currPlayer = startingPlayer;
-            gameOver = false;
+            this.nextPlayer = undefined;
+            this.movesTaken = 0;
+            this.currPlayer = this.startingPlayer;
+            this.gameOver = false;
             gridPieces.html('');
             $('.winner-text').html('');
-          };
-
-          this.currentPlayerTurn = function() {
-            return nextPlayer || startingPlayer;
-          };
-
-          this.isGameOver = function() {
-            return gameOver;
-          };
-
-          this.checkGameOver = function() {
-            if (movesTaken < 5) {
+            if (this.currPlayer.constructor.name !== "Player") {
+              ai(aiMove);
+            }
+          },
+          currentPlayerTurn: function() {
+            return this.nextPlayer || this.startingPlayer;
+          },
+          isGameOver: function() {
+            return this.gameOver;
+          },
+          checkGameOver: function() {
+            if (this.movesTaken < 5) {
               return;
             }
             // Row 1
             if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-2').html() && $('.grid-1').html() === $('.grid-3').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Row 2
             if ($('.grid-4').html() !== '' && $('.grid-4').html() === $('.grid-5').html() && $('.grid-4').html() === $('.grid-6').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Row 3
             if ($('.grid-7').html() !== '' && $('.grid-7').html() === $('.grid-8').html() && $('.grid-7').html() === $('.grid-9').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Col 1
             if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-4').html() && $('.grid-1').html() === $('.grid-7').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Col 2
             if ($('.grid-2').html() !== '' && $('.grid-2').html() === $('.grid-5').html() && $('.grid-2').html() === $('.grid-8').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Col 3
             if ($('.grid-3').html() !== '' && $('.grid-3').html() === $('.grid-6').html() && $('.grid-3').html() === $('.grid-9').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Diag 1
             if ($('.grid-1').html() !== '' && $('.grid-1').html() === $('.grid-5').html() && $('.grid-1').html() === $('.grid-9').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
 
             // Diag 2
             if ($('.grid-3').html() !== '' && $('.grid-3').html() === $('.grid-5').html() && $('.grid-3').html() === $('.grid-7').html()) {
-              gameOver = true;
+              this.gameOver = true;
             }
-            if (gameOver) {
-              $('.winner-text').html(currPlayer.name + ' wins!');
+            if (this.gameOver) {
+              $('.winner-text').html(this.currPlayer.name + ' wins!');
+            }
+            if ($('.winner-text').html() === '' &&
+                $('.grid-1').html() !== '' &&
+                $('.grid-2').html() !== '' &&
+                $('.grid-3').html() !== '' &&
+                $('.grid-4').html() !== '' &&
+                $('.grid-5').html() !== '' &&
+                $('.grid-6').html() !== '' &&
+                $('.grid-7').html() !== '' &&
+                $('.grid-8').html() !== '' &&
+                $('.grid-9').html() !== '') {
+              $('.winner-text').html('Draw!');
             }
           }
-        }
+        };
 
+        /* Player class: this class holds all the information for a human player */
         function Player(playerName, playerToken) {
           this.name = playerName;
           this.token = playerToken;
@@ -429,6 +466,169 @@
             throw "Player token must be X or O";
           }
         }
+
+        /* ComputerPlayer class: extends the Player class with additional functions
+           to control the AI */
+        function ComputerPlayer(token) {
+          Player.call(this, "Computer", token);
+          this.board = {};
+          this.winningCombos = {};
+          this.losingCombos = {};
+          this.init();
+        }
+
+        //ComputerPlayer.prototype = Player.prototype;
+        ComputerPlayer.prototype = {
+          init: function() {
+            this.board = {
+              1: undefined,
+              2: undefined,
+              3: undefined,
+              4: undefined,
+              5: undefined,
+              6: undefined,
+              7: undefined,
+              8: undefined,
+              9: undefined
+            }
+            this.winningCombos = [
+              [1,2,3],
+              [1,5,9],
+              [1,4,7],
+              [2,1,3],
+              [2,3,1],
+              [2,5,8],
+              [3,2,1],
+              [3,5,7],
+              [3,6,9],
+              [4,1,7],
+              [4,5,6],
+              [4,7,1],
+              [5,1,9],
+              [5,2,8],
+              [5,3,7],
+              [5,4,6],
+              [5,6,4],
+              [5,7,3],
+              [5,8,2],
+              [5,9,1],
+              [6,3,9],
+              [6,5,4],
+              [6,9,3],
+              [7,4,1],
+              [7,5,8],
+              [8,5,2],
+              [8,7,9],
+              [8,7,9],
+              [8,9,7],
+              [9,5,1],
+              [9,6,3],
+              [9,8,7]
+            ];
+            this.losingCombos = this.winningCombos;
+          },
+          updateBoard: function() {
+            for (var key in this.board) {
+              if (this.board.hasOwnProperty(key) && this.board.key === undefined) {
+                if ($(".grid-" + key).html() !== "") {
+                  this.board[key] = $(".grid-" + key).html();
+                } // end if
+              } // end if
+            } // end for
+          },
+          updateMoves: function() {
+            // Check if computer has any two in a row, and if so, go for the with with a three-in-a-row move
+            for (var key in this.board) {
+              if (this.board.hasOwnProperty(key) && this.board[key] !== undefined && this.board[key] !== this.token) {
+                this.winningCombos = this.winningCombos.filter(this.filterCombos, key);
+              } // end if
+              if (this.board.hasOwnProperty(key) && this.board[key] !== undefined && this.board[key] === this.token) {
+                this.losingCombos = this.losingCombos.filter(this.filterCombos, key);
+              } // end if
+            } // end for
+
+            if (!this.checkWinningMoves()) {
+              if (!this.checkLosingMoves()) {
+                // Make a random move, get a random winning combo and then get a random value from inside that winning combo.
+                if (this.winningCombos.length > 0) {
+                  var arr = this.winningCombos[Math.floor(Math.random() * this.winningCombos.length)];
+                  this.move(arr[Math.floor(Math.random() * arr.length)]);
+                } else {
+                  // There are no winning moves. Just go anywhere
+                  for (var key in this.board) {
+                    if (this.board[key] === undefined) {
+                      this.move(key);
+                      return;
+                    }
+                  }
+                }
+              }
+            }
+          }, // end checkMoves
+          /* returns true if a move is made */
+          checkWinningMoves: function() {
+            // We don't have to worry about grid items having another player token in it here
+            // because they have already been filtered out
+            for (var i = 0; i < this.winningCombos.length; i++) {
+              if (this.board[this.winningCombos[i][0]] === this.token) {
+                if (this.board[this.winningCombos[i][1]] === this.token || this.board[this.winningCombos[i][2]] === this.token) {
+                  //we have a winner because this.token is in 2 of the three winningCombo grids
+                  if (this.board[this.winningCombos[i][1]] === undefined) {
+                    // make the move into combo[2]
+                    this.move(this.winningCombos[i][1]);
+                    return true;
+                  } else {
+                    // make the move into combo[1]
+                    this.move(this.winningCombos[i][2]);
+                    return true;
+                  }
+                }
+              } else if (this.board[this.winningCombos[i][1]] === this.token && this.board[this.winningCombos[i][2]] === this.token) {
+                // Two of three means we also have a winner
+                // Make the move into combo[0]
+                this.move(this.winningCombos[i][0]);
+                return true;
+              }
+            }
+            return false;
+          },
+          checkLosingMoves: function() {
+            // We don't have to worry about grid items having another player token in it here
+            // because they have already been filtered out
+            for (var i = 0; i < this.losingCombos.length; i++) {
+              if (this.board[this.losingCombos[i][0]] !== undefined) {
+                if (this.board[this.losingCombos[i][1]] !== undefined || this.board[this.losingCombos[i][2]] !== undefined) {
+                  //we are about to lose because the other player has 2 of 3 of a winning row
+                  if (this.board[this.losingCombos[i][1]] === undefined) {
+                    // make the move into combo[1]
+                    this.move(this.losingCombos[i][1]);
+                    return true;
+                  } else {
+                    // make the move into combo[2]
+                    this.move(this.losingCombos[i][2]);
+                    return true;
+                  }
+                }
+              } else if (this.board[this.losingCombos[i][1]] !== undefined && this.board[this.losingCombos[i][2]] !== undefined) {
+                // Two of three means we about to lose. Save the game by taking combo[0]
+                this.move(this.losingCombos[i][0]);
+                return true;
+              }
+            }
+            return false;
+          },
+          move: function(gridNumber) {
+            if ($(".grid-" + gridNumber).html() !== "") {
+              // A player has already placed a token here.
+              throw new "Can't move here because another player has already placed a token in this square."
+            }
+            $(".grid-" + gridNumber).html(this.token);
+          },
+          filterCombos: function(value) {
+            return !value.includes(Number(this[0]));
+          }
+          //ComputerPlayer.prototype.constructor = ComputerPlayer;   // Set constructor back to Robot
+        }; // end ComputerPlayer.prototype
       });// end document ready 
     </script>
   </body>
